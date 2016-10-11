@@ -1,0 +1,6 @@
+[default]
+name=Default
+device=local
+runtime=jhbuild
+config-opts=
+default=true
