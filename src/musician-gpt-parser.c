@@ -284,6 +284,50 @@ read_body_v4 (MusicianGptParser       *self,
                numerator, denominator, n_repeats, nth_alternate, key);
     }
 
+  for (guint i = 0; i < n_tracks; i++)
+    {
+      g_autofree gchar *name = NULL;
+      MusicianGptTrackFlags flags;
+      GdkRGBA color;
+      guint32 n_strings;
+      guint32 tunings[7];
+      guint32 port;
+      guint32 channel;
+      guint32 channel_effects;
+      guint32 n_frets;
+      guint32 capo_at;
+      guint8 header;
+
+      if (!musician_gpt_input_stream_read_byte (stream, cancellable, &header, error))
+        return FALSE;
+
+      flags = header;
+
+      if (NULL == (name = musician_gpt_input_stream_read_fixed_string (stream, 40, cancellable, error)))
+        return FALSE;
+
+      g_print ("Track: %s\n", name);
+
+      if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_strings, error))
+        return FALSE;
+
+      g_print ("N Strings: %d\n", n_strings);
+
+      for (guint j = 0; j < G_N_ELEMENTS (tunings); j++)
+        {
+          if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &tunings[j], error))
+            return FALSE;
+        }
+
+      if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &port, error) ||
+          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &channel, error) ||
+          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &channel_effects, error) ||
+          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_frets, error) ||
+          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &capo_at, error) ||
+          !musician_gpt_input_stream_read_color (stream, cancellable, &color, error))
+        return FALSE;
+    }
+
   return TRUE;
 }
 

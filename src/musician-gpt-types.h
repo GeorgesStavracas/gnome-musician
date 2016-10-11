@@ -40,6 +40,13 @@ typedef enum
 
 typedef enum
 {
+  MUSICIAN_GPT_TRACK_FLAGS_DRUMS_TRACK   = 1 << 0,
+  MUSICIAN_GPT_TRACK_FLAGS_TWELVE_STRING = 1 << 1,
+  MUSICIAN_GPT_TRACK_FLAGS_BANJO_TRACK   = 1 << 2,
+} MusicianGptTrackFlags;
+
+typedef enum
+{
   MUSICIAN_GPT_OCTAVE_NONE,
   MUSICIAN_GPT_OCTAVE_EIGHTVA = 8,
 } MusicianGptOctave;
