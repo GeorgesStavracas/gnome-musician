@@ -749,6 +749,7 @@ musician_gpt_input_stream_read_byte (MusicianGptInputStream  *self,
 
 gboolean
 musician_gpt_input_stream_read_midi_port (MusicianGptInputStream  *self,
+                                          guint                    portnum,
                                           GCancellable            *cancellable,
                                           MusicianGptMidiPort     *port,
                                           GError                 **error)
@@ -762,8 +763,13 @@ musician_gpt_input_stream_read_midi_port (MusicianGptInputStream  *self,
   if (port == NULL)
     port = &dummy_port;
 
+  port->port_id = portnum;
+
   for (guint i = 0; i < G_N_ELEMENTS (port->channels); i++)
     {
+      port->channels[i].port_id = portnum;
+      port->channels[i].channel_id = i + 1;
+
       if (!musician_gpt_input_stream_read_uint32 (self, cancellable, &port->channels[i].instrument, error) ||
           !musician_gpt_input_stream_read_byte (self, cancellable, &port->channels[i].volume, error) ||
           !musician_gpt_input_stream_read_byte (self, cancellable, &port->channels[i].balance, error) ||

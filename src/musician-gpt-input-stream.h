@@ -87,6 +87,7 @@ gboolean                musician_gpt_input_stream_read_octave        (MusicianGp
                                                                       MusicianGptOctave       *octave,
                                                                       GError                 **error);
 gboolean                musician_gpt_input_stream_read_midi_port     (MusicianGptInputStream  *self,
+                                                                      guint                    portnum,
                                                                       GCancellable            *cancellable,
                                                                       MusicianGptMidiPort     *port,
                                                                       GError                 **error);

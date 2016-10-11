@@ -189,10 +189,10 @@ read_body_v4 (MusicianGptParser       *self,
     {
       MusicianGptMidiPort port;
 
-      if (!musician_gpt_input_stream_read_midi_port (stream, cancellable, &port, error))
+      if (!musician_gpt_input_stream_read_midi_port (stream, i + 1, cancellable, &port, error))
         return FALSE;
 
-      g_print ("MIDI Port (%d)\n", i);
+      g_print ("MIDI Port (%d)\n", port.port_id);
       for (guint j = 0; j < G_N_ELEMENTS (port.channels); j++)
         g_print ("  Instrument: %d\n"
                  "      Volume: %d\n"

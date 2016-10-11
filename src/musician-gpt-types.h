@@ -40,6 +40,8 @@ typedef enum
 
 typedef struct
 {
+  guint32 port_id;
+  guint32 channel_id;
   guint32 instrument;
   guint8  volume;
   guint8  balance;
@@ -53,6 +55,7 @@ typedef struct
 
 typedef struct
 {
+  guint32                port_id;
   MusicianGptMidiChannel channels[16];
 } MusicianGptMidiPort;
 
