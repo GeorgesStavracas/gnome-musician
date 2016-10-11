@@ -779,6 +779,9 @@ musician_gpt_input_stream_read_midi_port (MusicianGptInputStream  *self,
           !musician_gpt_input_stream_read_byte (self, cancellable, &port->channels[i].tremelo, error))
         return FALSE;
 
+      if (!g_input_stream_skip (G_INPUT_STREAM (self), 2, cancellable, error))
+        return FALSE;
+
       port->channels[i]._blank1 = 0;
       port->channels[i]._blank2 = 0;
     }
