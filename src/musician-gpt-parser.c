@@ -328,6 +328,19 @@ read_body_v4 (MusicianGptParser       *self,
         return FALSE;
     }
 
+  for (guint i = 0; i < n_measures; i++)
+    {
+      for (guint j = 0; j < n_tracks; j++)
+        {
+          guint32 n_beats;
+
+          if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_beats, error))
+            return FALSE;
+
+          /* XXX: Read beat */
+        }
+    }
+
   return TRUE;
 }
 
