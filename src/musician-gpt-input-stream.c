@@ -721,7 +721,7 @@ musician_gpt_input_stream_read_uint32 (MusicianGptInputStream  *self,
   return TRUE;
 }
 
-static gboolean
+gboolean
 musician_gpt_input_stream_read_byte (MusicianGptInputStream  *self,
                                      GCancellable            *cancellable,
                                      guchar                  *value,

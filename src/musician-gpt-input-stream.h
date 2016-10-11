@@ -91,6 +91,10 @@ gboolean                musician_gpt_input_stream_read_midi_port     (MusicianGp
                                                                       GCancellable            *cancellable,
                                                                       MusicianGptMidiPort     *port,
                                                                       GError                 **error);
+gboolean                musician_gpt_input_stream_read_byte          (MusicianGptInputStream  *self,
+                                                                      GCancellable            *cancellable,
+                                                                      guchar                  *value,
+                                                                      GError                 **error);
 gboolean                musician_gpt_input_stream_read_int32         (MusicianGptInputStream  *self,
                                                                       GCancellable            *cancellable,
                                                                       gint32                  *value,
