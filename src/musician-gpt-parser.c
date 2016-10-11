@@ -220,6 +220,70 @@ read_body_v4 (MusicianGptParser       *self,
 
   g_print ("%u tracks\n", n_tracks);
 
+  for (guint i = 0; i < n_measures; i++)
+    {
+      MusicianGptMeasureFlags flags;
+      guint8 header;
+      guint8 numerator = 0;
+      guint8 denominator = 0;
+      guint8 n_repeats = 0;
+      guint8 nth_alternate = 0;
+      guint8 key = 0;
+
+      if (!musician_gpt_input_stream_read_byte (stream, cancellable, &header, error))
+        return FALSE;
+
+      flags = header;
+
+      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_KEY_NUMERATOR)
+        {
+          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &numerator, error))
+            return FALSE;
+        }
+
+      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_KEY_DENOMINATOR)
+        {
+          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &denominator, error))
+            return FALSE;
+        }
+
+      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_REPEAT_END)
+        {
+          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &n_repeats, error))
+            return FALSE;
+        }
+
+      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_ALTERNATE_ENDING)
+        {
+          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &nth_alternate, error))
+            return FALSE;
+        }
+
+      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_MARKER)
+        {
+          g_autofree gchar *name = NULL;
+          GdkRGBA color;
+
+          if (NULL == (name = musician_gpt_input_stream_read_string (stream, cancellable, error)))
+            return FALSE;
+
+          if (!musician_gpt_input_stream_read_color (stream, cancellable, &color, error))
+            return FALSE;
+
+          g_print ("%s\n", name);
+        }
+
+      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_TONALITY)
+        {
+          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &key, error) ||
+              !musician_gpt_input_stream_read_byte (stream, cancellable, NULL, error))
+            return FALSE;
+        }
+
+      g_print ("%d %d %d %d %d\n",
+               numerator, denominator, n_repeats, nth_alternate, key);
+    }
+
   return TRUE;
 }
 
