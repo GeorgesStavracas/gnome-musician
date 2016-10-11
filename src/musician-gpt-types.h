@@ -24,7 +24,7 @@
 G_BEGIN_DECLS
 
 typedef gint32 MusicianGptNote;
-typedef gint8  MusicianGptKey;
+typedef gint32 MusicianGptKey;
 
 typedef enum
 {

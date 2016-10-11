@@ -624,12 +624,12 @@ musician_gpt_input_stream_read_key (MusicianGptInputStream  *self,
                                     GError                 **error)
 {
   GError *local_error = NULL;
-  gint8 real_key;
+  gint32 real_key;
 
   g_return_val_if_fail (MUSICIAN_IS_GPT_INPUT_STREAM (self), FALSE);
   g_return_val_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable), FALSE);
 
-  real_key = g_data_input_stream_read_byte (G_DATA_INPUT_STREAM (self), cancellable, &local_error);
+  real_key = g_data_input_stream_read_int32 (G_DATA_INPUT_STREAM (self), cancellable, &local_error);
 
   if (local_error != NULL)
     {

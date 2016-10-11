@@ -137,12 +137,12 @@ read_body_v4 (MusicianGptParser       *self,
 {
   MusicianGptTripletFeel triplet_feel;
   MusicianGptOctave octave;
+  MusicianGptKey key;
   GError *local_error = NULL;
   guint32 track_num;
   guint32 tempo;
   guint32 n_measures;
   guint32 n_tracks;
-  gint8 key;
 
   g_assert (MUSICIAN_IS_GPT_PARSER (self));
   g_assert (MUSICIAN_IS_GPT_INPUT_STREAM (stream));
