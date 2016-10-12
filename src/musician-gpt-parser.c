@@ -328,16 +328,61 @@ read_body_v4 (MusicianGptParser       *self,
         return FALSE;
     }
 
-  for (guint i = 0; i < n_measures; i++)
+  for (guint32 i = 0; i < n_measures; i++)
     {
-      for (guint j = 0; j < n_tracks; j++)
+      for (guint32 j = 0; j < n_tracks; j++)
         {
           guint32 n_beats;
 
           if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_beats, error))
             return FALSE;
 
-          /* XXX: Read beat */
+          for (guint32 k = 0; k < n_beats; k++)
+            {
+              MusicianGptBeatFlags flags;
+              guint8 status = 0;
+              guint32 n_tuplet = 0;
+              guint8 header;
+              gint8 duration = 0;
+
+              if (!musician_gpt_input_stream_read_byte (stream, cancellable, &header, error))
+                return FALSE;
+
+              flags = header;
+
+              if (flags & MUSICIAN_GPT_BEAT_FLAGS_STATUS)
+                {
+                  if (!musician_gpt_input_stream_read_byte (stream, cancellable, &status, error))
+                    return FALSE;
+                }
+
+              if (!musician_gpt_input_stream_read_byte (stream, cancellable, (guint8 *)&duration, error))
+                return FALSE;
+
+              if (flags & MUSICIAN_GPT_BEAT_FLAGS_N_TUPLET)
+                {
+                  if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_tuplet, error))
+                    return FALSE;
+                }
+
+              if (flags & MUSICIAN_GPT_BEAT_FLAGS_CHORD_DIAGRAM)
+                {
+                }
+
+              if (flags & MUSICIAN_GPT_BEAT_FLAGS_TEXT)
+                {
+                }
+
+              if (flags & MUSICIAN_GPT_BEAT_FLAGS_EFFECTS)
+                {
+                }
+
+              if (flags & MUSICIAN_GPT_BEAT_FLAGS_MIX_TABLE)
+                {
+                }
+
+              /* XXX: Read the note */
+            }
         }
     }
 
