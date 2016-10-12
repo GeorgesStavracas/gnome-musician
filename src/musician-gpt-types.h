@@ -21,8 +21,11 @@
 
 #include <glib-object.h>
 
+#include "musician-enums.h"
+
 G_BEGIN_DECLS
 
+typedef struct _MusicianGptSong MusicianGptSong;
 typedef gint32 MusicianGptNote;
 typedef gint32 MusicianGptKey;
 

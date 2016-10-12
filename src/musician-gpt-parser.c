@@ -18,478 +18,150 @@
 
 #define G_LOG_DOMAIN "musician-gpt-parser"
 
-#include "musician-gpt-input-stream.h"
+#include <glib/gi18n.h>
+
+#include "musician-gp4-parser.h"
 #include "musician-gpt-parser.h"
-
-/**
- * SECTION:musician-gpt-parser:
- * @title: #MusicianGptParser
- * @short_description: An parser for Guitar Pro™ files
- *
- * For more information on the format, see:
- *
- *   http://dguitar.sourceforge.net/GP4format.html#Summary
- *
- * Guitar Pro is a trademark of Arobas Music.
- */
+#include "musician-gpt-song.h"
 
 typedef struct
 {
-  gchar version[32];
-  gboolean (*read_header) (MusicianGptParser       *self,
-                           MusicianGptInputStream  *stream,
-                           GCancellable            *cancellable,
-                           GError                 **error);
-  gboolean (*read_body)   (MusicianGptParser       *self,
-                           MusicianGptInputStream  *stream,
-                           GCancellable            *cancellable,
-                           GError                 **error);
-} MusicianGptParserVtable;
-
-typedef struct
-{
-  const MusicianGptParserVtable *vtable;
+  MusicianGptSong *song;
 } MusicianGptParserPrivate;
+
+enum {
+  PROP_0,
+  PROP_SONG,
+  N_PROPS
+};
 
 G_DEFINE_TYPE_WITH_PRIVATE (MusicianGptParser, musician_gpt_parser, G_TYPE_OBJECT)
 
-static gboolean
-read_header_v4 (MusicianGptParser       *self,
-                MusicianGptInputStream  *stream,
-                GCancellable            *cancellable,
-                GError                 **error)
+static GParamSpec *properties [N_PROPS];
+
+static MusicianGptSong *
+musician_gpt_parser_real_load (MusicianGptParser       *self,
+                               MusicianGptInputStream  *stream,
+                               const gchar             *version,
+                               GCancellable            *cancellable,
+                               GError                 **error)
 {
-  g_autofree gchar *album = NULL;
-  g_autofree gchar *author = NULL;
-  g_autofree gchar *copyright = NULL;
-  g_autofree gchar *interpret = NULL;
-  g_autofree gchar *instructional = NULL;
-  g_autofree gchar *subtitle = NULL;
-  g_autofree gchar *writer = NULL;
-  g_autofree gchar *title = NULL;
-  g_auto(GStrv) comments = NULL;
-  gint32 n_comments;
-
-  /* Read the title of the piece */
-  if (NULL == (title = musician_gpt_input_stream_read_string (stream, cancellable, error)))
-    return FALSE;
-
-  /* Read the subtitle of the piece */
-  if (NULL == (subtitle = musician_gpt_input_stream_read_string (stream, cancellable, error)))
-    return FALSE;
-
-  /* Read the interpret of the piece */
-  if (NULL == (interpret = musician_gpt_input_stream_read_string (stream, cancellable, error)))
-    return FALSE;
-
-  /* Read the album of the piece */
-  if (NULL == (album = musician_gpt_input_stream_read_string (stream, cancellable, error)))
-    return FALSE;
-
-  /* Read the author of the piece */
-  if (NULL == (author = musician_gpt_input_stream_read_string (stream, cancellable, error)))
-    return FALSE;
-
-  /* Read the copyright of the piece */
-  if (NULL == (copyright = musician_gpt_input_stream_read_string (stream, cancellable, error)))
-    return FALSE;
-
-  /* Read the tab_author of the piece */
-  if (NULL == (writer = musician_gpt_input_stream_read_string (stream, cancellable, error)))
-    return FALSE;
-
-  /* Read the instructional of the piece */
-  if (NULL == (instructional = musician_gpt_input_stream_read_string (stream, cancellable, error)))
-    return FALSE;
-
-  g_strstrip (title);
-  g_strstrip (subtitle);
-  g_strstrip (interpret);
-  g_strstrip (album);
-  g_strstrip (author);
-  g_strstrip (copyright);
-  g_strstrip (writer);
-  g_strstrip (instructional);
-
-  g_print ("Title:           \"%s\"\n"
-           "Subtitle:        \"%s\"\n"
-           "Interpret:       \"%s\"\n"
-           "Album:           \"%s\"\n"
-           "Author:          \"%s\"\n"
-           "Copyright:       \"%s\"\n"
-           "Writer:          \"%s\"\n"
-           "Instructional:   \"%s\"\n",
-           title, subtitle, interpret, album, author, copyright, writer, instructional);
-
-  comments = musician_gpt_input_stream_read_string_array (stream, cancellable, error);
-
-  for (guint i = 0; comments && comments[i]; i++)
-    g_print ("Comments[%d]: %s", i, comments[i]);
-
-  return TRUE;
-}
-
-static gboolean
-read_body_v4 (MusicianGptParser       *self,
-              MusicianGptInputStream  *stream,
-              GCancellable            *cancellable,
-              GError                 **error)
-{
-  MusicianGptTripletFeel triplet_feel;
-  MusicianGptOctave octave;
-  MusicianGptKey key;
-  GError *local_error = NULL;
-  guint32 track_num;
-  guint32 tempo;
-  guint32 n_measures;
-  guint32 n_tracks;
-
-  g_assert (MUSICIAN_IS_GPT_PARSER (self));
-  g_assert (MUSICIAN_IS_GPT_INPUT_STREAM (stream));
-  g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
-
-  if (!musician_gpt_input_stream_read_triplet_feel (stream, cancellable, &triplet_feel, error))
-    return FALSE;
-
-  track_num = g_data_input_stream_read_uint32 (G_DATA_INPUT_STREAM (stream), cancellable, &local_error);
-
-  if (local_error != NULL)
-    {
-      g_propagate_error (error, local_error);
-      return FALSE;
-    }
-
-  for (guint i = 0; i < 5; i++)
-    {
-      g_autofree gchar *lyric = NULL;
-      guint32 position;
-
-      if (NULL == (lyric = musician_gpt_input_stream_read_lyric (stream, cancellable, &position, error)))
-        return FALSE;
-
-      g_print ("Lyric (%u): %s\n", position, lyric);
-    }
-
-  if (!musician_gpt_input_stream_read_tempo (stream, cancellable, &tempo, error))
-    return FALSE;
-
-  g_print ("Tempo: %u\n", tempo);
-
-  if (!musician_gpt_input_stream_read_key (stream, cancellable, &key, error))
-    return FALSE;
-
-  g_print ("key: %u\n", key);
-
-  if (!musician_gpt_input_stream_read_octave (stream, cancellable, &octave, error))
-    return FALSE;
-
-  g_print ("octave: %u\n", octave);
-
-  for (guint i = 0; i < 4; i++)
-    {
-      MusicianGptMidiPort port;
-
-      if (!musician_gpt_input_stream_read_midi_port (stream, i + 1, cancellable, &port, error))
-        return FALSE;
-
-      g_print ("MIDI Port (%d)\n", port.port_id);
-      for (guint j = 0; j < G_N_ELEMENTS (port.channels); j++)
-        g_print ("  Instrument: %d\n"
-                 "      Volume: %d\n"
-                 "     Balance: %d\n"
-                 "      Chorus: %d\n"
-                 "      Reverb: %d\n"
-                 "      Phaser: %d\n"
-                 "     Tremelo: %d\n\n",
-                 port.channels[j].instrument,
-                 port.channels[j].volume,
-                 port.channels[j].balance,
-                 port.channels[j].chorus,
-                 port.channels[j].reverb,
-                 port.channels[j].phaser,
-                 port.channels[j].tremelo);
-    }
-
-  if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_measures, error))
-    return FALSE;
-
-  g_print ("%u measures\n", n_measures);
-
-  if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_tracks, error))
-    return FALSE;
-
-  g_print ("%u tracks\n", n_tracks);
-
-  for (guint i = 0; i < n_measures; i++)
-    {
-      MusicianGptMeasureFlags flags;
-      guint8 header;
-      guint8 numerator = 0;
-      guint8 denominator = 0;
-      guint8 n_repeats = 0;
-      guint8 nth_alternate = 0;
-      guint8 key = 0;
-
-      if (!musician_gpt_input_stream_read_byte (stream, cancellable, &header, error))
-        return FALSE;
-
-      flags = header;
-
-      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_KEY_NUMERATOR)
-        {
-          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &numerator, error))
-            return FALSE;
-        }
-
-      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_KEY_DENOMINATOR)
-        {
-          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &denominator, error))
-            return FALSE;
-        }
-
-      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_REPEAT_END)
-        {
-          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &n_repeats, error))
-            return FALSE;
-        }
-
-      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_ALTERNATE_ENDING)
-        {
-          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &nth_alternate, error))
-            return FALSE;
-        }
-
-      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_MARKER)
-        {
-          g_autofree gchar *name = NULL;
-          GdkRGBA color;
-
-          if (NULL == (name = musician_gpt_input_stream_read_string (stream, cancellable, error)))
-            return FALSE;
-
-          if (!musician_gpt_input_stream_read_color (stream, cancellable, &color, error))
-            return FALSE;
-
-          g_print ("%s\n", name);
-        }
-
-      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_TONALITY)
-        {
-          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &key, error) ||
-              !musician_gpt_input_stream_read_byte (stream, cancellable, NULL, error))
-            return FALSE;
-        }
-
-      g_print ("%d %d %d %d %d\n",
-               numerator, denominator, n_repeats, nth_alternate, key);
-    }
-
-  for (guint i = 0; i < n_tracks; i++)
-    {
-      g_autofree gchar *name = NULL;
-      MusicianGptTrackFlags flags;
-      GdkRGBA color;
-      guint32 n_strings;
-      guint32 tunings[7];
-      guint32 port;
-      guint32 channel;
-      guint32 channel_effects;
-      guint32 n_frets;
-      guint32 capo_at;
-      guint8 header;
-
-      if (!musician_gpt_input_stream_read_byte (stream, cancellable, &header, error))
-        return FALSE;
-
-      flags = header;
-
-      if (NULL == (name = musician_gpt_input_stream_read_fixed_string (stream, 40, cancellable, error)))
-        return FALSE;
-
-      g_print ("Track: %s\n", name);
-
-      if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_strings, error))
-        return FALSE;
-
-      g_print ("N Strings: %d\n", n_strings);
-
-      for (guint j = 0; j < G_N_ELEMENTS (tunings); j++)
-        {
-          if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &tunings[j], error))
-            return FALSE;
-        }
-
-      if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &port, error) ||
-          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &channel, error) ||
-          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &channel_effects, error) ||
-          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_frets, error) ||
-          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &capo_at, error) ||
-          !musician_gpt_input_stream_read_color (stream, cancellable, &color, error))
-        return FALSE;
-    }
-
-  for (guint32 i = 0; i < n_measures; i++)
-    {
-      for (guint32 j = 0; j < n_tracks; j++)
-        {
-          guint32 n_beats;
-
-          if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_beats, error))
-            return FALSE;
-
-          for (guint32 k = 0; k < n_beats; k++)
-            {
-              MusicianGptBeatFlags flags;
-              guint8 status = 0;
-              guint32 n_tuplet = 0;
-              guint8 header;
-              gint8 duration = 0;
-
-              if (!musician_gpt_input_stream_read_byte (stream, cancellable, &header, error))
-                return FALSE;
-
-              flags = header;
-
-              if (flags & MUSICIAN_GPT_BEAT_FLAGS_STATUS)
-                {
-                  if (!musician_gpt_input_stream_read_byte (stream, cancellable, &status, error))
-                    return FALSE;
-                }
-
-              if (!musician_gpt_input_stream_read_byte (stream, cancellable, (guint8 *)&duration, error))
-                return FALSE;
-
-              if (flags & MUSICIAN_GPT_BEAT_FLAGS_N_TUPLET)
-                {
-                  if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_tuplet, error))
-                    return FALSE;
-                }
-
-              if (flags & MUSICIAN_GPT_BEAT_FLAGS_CHORD_DIAGRAM)
-                {
-                }
-
-              if (flags & MUSICIAN_GPT_BEAT_FLAGS_TEXT)
-                {
-                }
-
-              if (flags & MUSICIAN_GPT_BEAT_FLAGS_EFFECTS)
-                {
-                }
-
-              if (flags & MUSICIAN_GPT_BEAT_FLAGS_MIX_TABLE)
-                {
-                }
-
-              /* XXX: Read the note */
-            }
-        }
-    }
-
-  return TRUE;
-}
-
-static gboolean
-musician_gpt_parser_load_vtable (MusicianGptParser  *self,
-                                 const gchar        *version,
-                                 GError            **error)
-{
-  MusicianGptParserPrivate *priv = musician_gpt_parser_get_instance_private (self);
-  static const MusicianGptParserVtable vtables[] = {
-    { "FICHIER GUITARE PRO v1", NULL },
-    { "FICHIER GUITARE PRO v1.01", NULL },
-    { "FICHIER GUITARE PRO v1.02", NULL },
-    { "FICHIER GUITARE PRO v1.03", NULL },
-    { "FICHIER GUITARE PRO v1.04", NULL },
-    { "FICHIER GUITAR PRO v2.20", NULL },
-    { "FICHIER GUITAR PRO v2.21", NULL },
-    { "FICHIER GUITAR PRO v3.00", NULL },
-    { "FICHIER GUITAR PRO v4.00", read_header_v4, read_body_v4 },
-    { "FICHIER GUITAR PRO v4.06", read_header_v4, read_body_v4 },
-    { "FICHIER GUITAR PRO L4.06", read_header_v4, read_body_v4 },
+  g_autoptr(MusicianGptParser) subparser = NULL;
+  GType type_id = G_TYPE_NONE;
+  struct {
+    const gchar *version;
+    GType        type_id;
+  } mappings[] = {
+    { "FICHIER GUITAR PRO v4.00", MUSICIAN_TYPE_GP4_PARSER },
+    { "FICHIER GUITAR PRO v4.06", MUSICIAN_TYPE_GP4_PARSER },
+    { "FICHIER GUITAR PRO L4.06", MUSICIAN_TYPE_GP4_PARSER },
   };
 
   g_assert (MUSICIAN_IS_GPT_PARSER (self));
+  g_assert (MUSICIAN_IS_GPT_INPUT_STREAM (stream));
   g_assert (version != NULL);
+  g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
 
-  for (guint i = 0; i < G_N_ELEMENTS (vtables); i++)
+  /*
+   * This function serves as a default implementation of ::load that can
+   * sniff the proper subclass based on @version. This is helpful because
+   * it doesn't require consumers of the parser to know which exact parser
+   * to use, but allow us to separate code into different subclasses for
+   * maintainability.
+   */
+
+  for (guint i = 0; i < G_N_ELEMENTS (mappings); i++)
     {
-      const MusicianGptParserVtable *vtable = &vtables[i];
-
-      if (g_str_equal (vtable->version, version))
+      if (g_str_equal (version, mappings[i].version))
         {
-          priv->vtable = vtable;
-          return TRUE;
+          type_id = mappings[i].type_id;
+          break;
         }
     }
 
-  g_set_error (error,
-               G_IO_ERROR,
-               G_IO_ERROR_NOT_SUPPORTED,
-               "Guitar Pro version “%s” is not supported",
-               version);
+  if (!g_type_is_a (type_id, MUSICIAN_TYPE_GPT_PARSER))
+    {
+      g_set_error (error,
+                   G_IO_ERROR,
+                   G_IO_ERROR_NOT_SUPPORTED,
+                   "The file format \"%s\" is not supported",
+                   version);
+      return NULL;
+    }
 
-  return FALSE;
+  subparser = g_object_new (type_id, NULL);
+
+  /*
+   * Double check that the subclass did in fact override this function
+   * or else we just error out to prevent a stack overflow and instead
+   * provide a somewhat more helpful error message.
+   */
+  if (MUSICIAN_GPT_PARSER_GET_CLASS (subparser)->load == musician_gpt_parser_real_load)
+    {
+      g_set_error (error,
+                   G_IO_ERROR,
+                   G_IO_ERROR_INVAL,
+                   "%s failed to override MusicianGptParserClass::load",
+                   G_OBJECT_TYPE_NAME (subparser));
+      return NULL;
+    }
+
+  return MUSICIAN_GPT_PARSER_GET_CLASS (subparser)->load (subparser, stream, version, cancellable, error);
+}
+
+static void
+musician_gpt_parser_finalize (GObject *object)
+{
+  MusicianGptParser *self = (MusicianGptParser *)object;
+  MusicianGptParserPrivate *priv = musician_gpt_parser_get_instance_private (self);
+
+  g_clear_object (&priv->song);
+
+  G_OBJECT_CLASS (musician_gpt_parser_parent_class)->finalize (object);
+}
+
+static void
+musician_gpt_parser_get_property (GObject    *object,
+                                  guint       prop_id,
+                                  GValue     *value,
+                                  GParamSpec *pspec)
+{
+  MusicianGptParser *self = MUSICIAN_GPT_PARSER (object);
+
+  switch (prop_id)
+    {
+    case PROP_SONG:
+      g_value_set_object (value, musician_gpt_parser_get_song (self));
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    }
 }
 
 static void
 musician_gpt_parser_class_init (MusicianGptParserClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->finalize = musician_gpt_parser_finalize;
+  object_class->get_property = musician_gpt_parser_get_property;
+
+  klass->load = musician_gpt_parser_real_load;
+
+  properties [PROP_SONG] =
+    g_param_spec_object ("song",
+                         "Song",
+                         "The song that has been loaded",
+                         MUSICIAN_TYPE_GPT_SONG,
+                         (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_properties (object_class, N_PROPS, properties);
 }
 
 static void
 musician_gpt_parser_init (MusicianGptParser *self)
 {
-}
-
-static gboolean
-musician_gpt_parser_load_header (MusicianGptParser       *self,
-                                 MusicianGptInputStream  *stream,
-                                 GCancellable            *cancellable,
-                                 GError                 **error)
-{
-  MusicianGptParserPrivate *priv = musician_gpt_parser_get_instance_private (self);
-
-  g_assert (MUSICIAN_IS_GPT_PARSER (self));
-  g_assert (MUSICIAN_IS_GPT_INPUT_STREAM (stream));
-  g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
-  g_assert (priv->vtable != NULL);
-
-  if (priv->vtable->read_header == NULL)
-    {
-      g_set_error_literal (error,
-                           G_IO_ERROR,
-                           G_IO_ERROR_NOT_SUPPORTED,
-                           "The file format is not supported");
-      return FALSE;
-    }
-
-  return priv->vtable->read_header (self, stream, cancellable, error);
-}
-
-static gboolean
-musician_gpt_parser_load_body (MusicianGptParser       *self,
-                               MusicianGptInputStream  *stream,
-                               GCancellable            *cancellable,
-                               GError                 **error)
-{
-  MusicianGptParserPrivate *priv = musician_gpt_parser_get_instance_private (self);
-
-  g_assert (MUSICIAN_IS_GPT_PARSER (self));
-  g_assert (MUSICIAN_IS_GPT_INPUT_STREAM (stream));
-  g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
-  g_assert (priv->vtable != NULL);
-
-  if (priv->vtable->read_body == NULL)
-    {
-      g_set_error_literal (error,
-                           G_IO_ERROR,
-                           G_IO_ERROR_NOT_SUPPORTED,
-                           "The file format is not supported");
-      return FALSE;
-    }
-
-  return priv->vtable->read_body (self, stream, cancellable, error);
 }
 
 MusicianGptParser *
@@ -498,36 +170,83 @@ musician_gpt_parser_new (void)
   return g_object_new (MUSICIAN_TYPE_GPT_PARSER, NULL);
 }
 
+/**
+ * musician_gpt_parser_get_song:
+ *
+ * Returns: (nullable) (transfer none): A #MusicianGptSong or %NULL.
+ */
+MusicianGptSong *
+musician_gpt_parser_get_song (MusicianGptParser *self)
+{
+  MusicianGptParserPrivate *priv = musician_gpt_parser_get_instance_private (self);
+
+  g_return_val_if_fail (MUSICIAN_IS_GPT_PARSER (self), NULL);
+
+  return priv->song;
+}
+
+gboolean
+musician_gpt_parser_load_from_file (MusicianGptParser  *self,
+                                    GFile              *file,
+                                    GCancellable       *cancellable,
+                                    GError            **error)
+{
+  g_autoptr(GFileInputStream) stream = NULL;
+
+  g_return_val_if_fail (MUSICIAN_IS_GPT_PARSER (self), FALSE);
+  g_return_val_if_fail (G_IS_FILE (file), FALSE);
+  g_return_val_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable), FALSE);
+
+  if (NULL != (stream = g_file_read (file, cancellable, error)))
+    return musician_gpt_parser_load_from_stream (self, G_INPUT_STREAM (stream), cancellable, error);
+
+  return FALSE;
+}
+
 gboolean
 musician_gpt_parser_load_from_stream (MusicianGptParser  *self,
                                       GInputStream       *base_stream,
                                       GCancellable       *cancellable,
                                       GError            **error)
 {
+  MusicianGptParserPrivate *priv = musician_gpt_parser_get_instance_private (self);
   g_autoptr(MusicianGptInputStream) stream = NULL;
+  g_autoptr(MusicianGptSong) song = NULL;
   g_autofree gchar *version = NULL;
+  GType file_format;
 
   g_return_val_if_fail (MUSICIAN_IS_GPT_PARSER (self), FALSE);
   g_return_val_if_fail (G_IS_INPUT_STREAM (base_stream), FALSE);
   g_return_val_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable), FALSE);
 
+  if (priv->song != NULL)
+    {
+      g_set_error (error,
+                   G_IO_ERROR,
+                   G_IO_ERROR_INVAL,
+                   "Cannot use parser more than once");
+      return FALSE;
+    }
+
+  /* Create our wrapper stream to read Guitar Pro formats */
   stream = musician_gpt_input_stream_new (base_stream);
 
-  /* Read the file version */
-  if (NULL == (version = musician_gpt_input_stream_read_fixed_string (stream, 30, cancellable, error)))
-    return FALSE;
+  /* Read the version string so we can dispatch to the proper loader.
+   * Our default load implementation will lookup based on known subclasses
+   * and dispatch to a subparser to perform the parse. To force a specific
+   * version loader, just use that subclass (such as MusicianGp4Parser).
+   */
+  version = musician_gpt_input_stream_read_fixed_string (stream, 30, cancellable, error);
 
-  /* Discover the vtable for the version at hand */
-  if (!musician_gpt_parser_load_vtable (self, version, error))
-    return FALSE;
+  /* Let our potential subclass override the parsing process */
+  song = MUSICIAN_GPT_PARSER_GET_CLASS (self)->load (self, stream, version, cancellable, error);
 
-  /* Read the file header */
-  if (!musician_gpt_parser_load_header (self, stream, cancellable, error))
-    return FALSE;
+  if (song != NULL)
+    {
+      g_clear_object (&priv->song);
+      priv->song = g_steal_pointer (&song);
+      return TRUE;
+    }
 
-  /* Read the file body */
-  if (!musician_gpt_parser_load_body (self, stream, cancellable, error))
-    return FALSE;
-
-  return TRUE;
+  return FALSE;
 }

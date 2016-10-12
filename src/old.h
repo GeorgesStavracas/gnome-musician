@@ -21,9 +21,6 @@
 
 #include <gio/gio.h>
 
-#include "musician-gpt-input-stream.h"
-#include "musician-gpt-types.h"
-
 G_BEGIN_DECLS
 
 #define MUSICIAN_TYPE_GPT_PARSER (musician_gpt_parser_get_type())
@@ -34,28 +31,25 @@ struct _MusicianGptParserClass
 {
   GObjectClass parent_instance;
 
-  MusicianGptSong *(*load) (MusicianGptParser       *self,
-                            MusicianGptInputStream  *stream,
-                            const gchar             *version,
-                            GCancellable            *cancellable,
-                            GError                 **error);
-
   gpointer _reserved1;
   gpointer _reserved2;
   gpointer _reserved3;
   gpointer _reserved4;
+  gpointer _reserved5;
+  gpointer _reserved6;
+  gpointer _reserved7;
+  gpointer _reserved8;
+  gpointer _reserved9;
+  gpointer _reserved10;
+  gpointer _reserved11;
+  gpointer _reserved12;
 };
 
 MusicianGptParser *musician_gpt_parser_new              (void);
-MusicianGptSong   *musician_gpt_parser_get_song         (MusicianGptParser   *self);
-gboolean           musician_gpt_parser_load_from_stream (MusicianGptParser   *self,
-                                                         GInputStream        *base_stream,
-                                                         GCancellable        *cancellable,
-                                                         GError             **error);
-gboolean           musician_gpt_parser_load_from_file   (MusicianGptParser   *self,
-                                                         GFile               *file,
-                                                         GCancellable        *cancellable,
-                                                         GError             **error);
+gboolean           musician_gpt_parser_load_from_stream (MusicianGptParser  *self,
+                                                         GInputStream       *stream,
+                                                         GCancellable       *cancellable,
+                                                         GError            **error);
 
 G_END_DECLS
 
