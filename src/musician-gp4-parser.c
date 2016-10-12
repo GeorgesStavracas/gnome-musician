@@ -154,6 +154,137 @@ musician_gp4_parser_load_midi_ports (MusicianGp4Parser       *self,
   return TRUE;
 }
 
+static gboolean
+musician_gp4_parser_load_measures (MusicianGp4Parser       *self,
+                                   MusicianGptInputStream  *stream,
+                                   MusicianGptSong         *song,
+                                   guint                    n_measures,
+                                   GCancellable            *cancellable,
+                                   GError                 **error)
+{
+  g_assert (MUSICIAN_IS_GP4_PARSER (self));
+  g_assert (MUSICIAN_IS_GPT_INPUT_STREAM (stream));
+  g_assert (MUSICIAN_IS_GPT_SONG (song));
+  g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
+
+  for (guint i = 0; i < n_measures; i++)
+    {
+      MusicianGptMeasureFlags flags;
+      guint8 header;
+      guint8 numerator = 0;
+      guint8 denominator = 0;
+      guint8 n_repeats = 0;
+      guint8 nth_alternate = 0;
+      guint8 key = 0;
+
+      if (!musician_gpt_input_stream_read_byte (stream, cancellable, &header, error))
+        return FALSE;
+
+      flags = header;
+
+      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_KEY_NUMERATOR)
+        {
+          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &numerator, error))
+            return FALSE;
+        }
+
+      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_KEY_DENOMINATOR)
+        {
+          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &denominator, error))
+            return FALSE;
+        }
+
+      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_REPEAT_END)
+        {
+          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &n_repeats, error))
+            return FALSE;
+        }
+
+      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_ALTERNATE_ENDING)
+        {
+          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &nth_alternate, error))
+            return FALSE;
+        }
+
+      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_MARKER)
+        {
+          g_autofree gchar *name = NULL;
+          GdkRGBA color;
+
+          if (NULL == (name = musician_gpt_input_stream_read_string (stream, cancellable, error)))
+            return FALSE;
+
+          if (!musician_gpt_input_stream_read_color (stream, cancellable, &color, error))
+            return FALSE;
+        }
+
+      if (flags & MUSICIAN_GPT_MEASURE_FLAGS_TONALITY)
+        {
+          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &key, error) ||
+              !musician_gpt_input_stream_read_byte (stream, cancellable, NULL, error))
+            return FALSE;
+        }
+    }
+
+  return TRUE;
+}
+
+static gboolean
+musician_gp4_parser_load_tracks (MusicianGp4Parser       *self,
+                                 MusicianGptInputStream  *stream,
+                                 MusicianGptSong         *song,
+                                 guint                    n_tracks,
+                                 GCancellable            *cancellable,
+                                 GError                 **error)
+{
+  g_assert (MUSICIAN_IS_GP4_PARSER (self));
+  g_assert (MUSICIAN_IS_GPT_INPUT_STREAM (stream));
+  g_assert (MUSICIAN_IS_GPT_SONG (song));
+  g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
+
+  for (guint i = 0; i < n_tracks; i++)
+    {
+      g_autofree gchar *name = NULL;
+      MusicianGptTrackFlags flags;
+      GdkRGBA color;
+      guint32 n_strings;
+      guint32 tunings[7];
+      guint32 port;
+      guint32 channel;
+      guint32 channel_effects;
+      guint32 n_frets;
+      guint32 capo_at;
+      guint8 header;
+
+      if (!musician_gpt_input_stream_read_byte (stream, cancellable, &header, error))
+        return FALSE;
+
+      flags = header;
+
+      if (NULL == (name = musician_gpt_input_stream_read_fixed_string (stream, 40, cancellable, error)))
+        return FALSE;
+
+      if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_strings, error))
+        return FALSE;
+
+      for (guint j = 0; j < G_N_ELEMENTS (tunings); j++)
+        {
+          if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &tunings[j], error))
+            return FALSE;
+        }
+
+      if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &port, error) ||
+          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &channel, error) ||
+          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &channel_effects, error) ||
+          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_frets, error) ||
+          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &capo_at, error) ||
+          !musician_gpt_input_stream_read_color (stream, cancellable, &color, error))
+        return FALSE;
+    }
+
+  return TRUE;
+}
+
 static MusicianGptSong *
 musician_gp4_parser_load (MusicianGptParser       *parser,
                           MusicianGptInputStream  *stream,
@@ -216,11 +347,19 @@ musician_gp4_parser_load (MusicianGptParser       *parser,
 
   /* Load the number of measures in the song */
   if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_measures, error))
-    return FALSE;
+    return NULL;
 
   /* Load the number of tracks in the song */
   if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_tracks, error))
-    return FALSE;
+    return NULL;
+
+  /* Load information about our mesaures */
+  if (!musician_gp4_parser_load_measures (self, stream, song, n_measures, cancellable, error))
+    return NULL;
+
+  /* Load information about the tracks */
+  if (!musician_gp4_parser_load_tracks (self, stream, song, n_tracks, cancellable, error))
+    return NULL;
 
   return g_steal_pointer (&song);
 }
