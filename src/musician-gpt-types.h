@@ -25,9 +25,12 @@
 
 G_BEGIN_DECLS
 
-typedef struct _MusicianGptSong MusicianGptSong;
+typedef struct _MusicianGptSong  MusicianGptSong;
+typedef struct _MusicianGptTrack MusicianGptTrack;
+
 typedef gint32 MusicianGptNote;
 typedef gint32 MusicianGptKey;
+typedef gint32 MusicianGptTuning;
 
 typedef enum
 {

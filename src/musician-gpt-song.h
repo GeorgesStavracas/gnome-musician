@@ -48,6 +48,8 @@ struct _MusicianGptSongClass
 };
 
 MusicianGptSong        *musician_gpt_song_new                (void);
+void                    musician_gpt_song_add_track          (MusicianGptSong        *self,
+                                                              MusicianGptTrack       *track);
 const gchar            *musician_gpt_song_get_album          (MusicianGptSong        *self);
 const gchar            *musician_gpt_song_get_artist         (MusicianGptSong        *self);
 const gchar            *musician_gpt_song_get_copyright      (MusicianGptSong        *self);
@@ -72,9 +74,9 @@ void                    musician_gpt_song_set_instructions   (MusicianGptSong   
 void                    musician_gpt_song_set_interpretation (MusicianGptSong        *self,
                                                               const gchar            *interpretation);
 void                    musician_gpt_song_set_octave         (MusicianGptSong        *self,
-							      MusicianGptOctave       octave);
+                                                              MusicianGptOctave       octave);
 void                    musician_gpt_song_set_key            (MusicianGptSong        *self,
-							      MusicianGptKey          key);
+                                                              MusicianGptKey          key);
 void                    musician_gpt_song_set_subtitle       (MusicianGptSong        *self,
                                                               const gchar            *subtitle);
 void                    musician_gpt_song_set_tempo          (MusicianGptSong        *self,

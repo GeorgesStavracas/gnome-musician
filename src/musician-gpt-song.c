@@ -19,6 +19,7 @@
 #define G_LOG_DOMAIN "musician-gpt-song"
 
 #include "musician-gpt-song.h"
+#include "musician-gpt-track.h"
 
 typedef struct
 {
@@ -33,6 +34,8 @@ typedef struct
   gchar *writer;
 
   gchar **comments;
+
+  GPtrArray *tracks;
 
   MusicianGptTripletFeel triplet_feel;
   MusicianGptKey key;
@@ -81,6 +84,8 @@ musician_gpt_song_finalize (GObject *object)
   g_clear_pointer (&priv->title, g_free);
   g_clear_pointer (&priv->version, g_free);
   g_clear_pointer (&priv->writer, g_free);
+
+  g_clear_pointer (&priv->tracks, g_ptr_array_unref);
 
   G_OBJECT_CLASS (musician_gpt_song_parent_class)->finalize (object);
 }
@@ -329,6 +334,7 @@ musician_gpt_song_init (MusicianGptSong *self)
 {
   MusicianGptSongPrivate *priv = musician_gpt_song_get_instance_private (self);
 
+  priv->tracks = g_ptr_array_new_with_free_func (g_object_unref);
   priv->ports = g_array_new (FALSE, FALSE, sizeof (MusicianGptMidiPort));
 }
 
@@ -694,4 +700,28 @@ _musician_gpt_song_set_midi_ports (MusicianGptSong           *self,
   g_array_set_size (priv->ports, 0);
   if (n_ports > 0)
     g_array_append_vals (priv->ports, ports, n_ports);
+}
+
+void
+musician_gpt_song_add_track (MusicianGptSong  *self,
+                             MusicianGptTrack *track)
+{
+  MusicianGptSongPrivate *priv = musician_gpt_song_get_instance_private (self);
+
+  g_return_if_fail (MUSICIAN_IS_GPT_SONG (self));
+  g_return_if_fail (MUSICIAN_IS_GPT_TRACK (track));
+
+  g_ptr_array_add (priv->tracks, g_object_ref (track));
+}
+
+void
+musician_gpt_song_remove_track (MusicianGptSong  *self,
+                                MusicianGptTrack *track)
+{
+  MusicianGptSongPrivate *priv = musician_gpt_song_get_instance_private (self);
+
+  g_return_if_fail (MUSICIAN_IS_GPT_SONG (self));
+  g_return_if_fail (MUSICIAN_IS_GPT_TRACK (track));
+
+  g_ptr_array_remove (priv->tracks, track);
 }

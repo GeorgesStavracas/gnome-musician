@@ -15,6 +15,8 @@ libgnome_musician_la_SOURCES = \
 	musician-gpt-song.c \
 	musician-gpt-song.h \
 	musician-gpt-song-private.h \
+	musician-gpt-track.c \
+	musician-gpt-track.h \
 	$(NULL)
 
 libgnome_musician_la_CFLAGS = \

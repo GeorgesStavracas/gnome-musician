@@ -21,6 +21,7 @@
 #include "musician-gp4-parser.h"
 #include "musician-gpt-song.h"
 #include "musician-gpt-song-private.h"
+#include "musician-gpt-track.h"
 
 struct _MusicianGp4Parser
 {
@@ -224,6 +225,13 @@ musician_gp4_parser_load_measures (MusicianGp4Parser       *self,
               !musician_gpt_input_stream_read_byte (stream, cancellable, NULL, error))
             return FALSE;
         }
+
+      /*
+       * We might be able to do a lightweight instance instead of a full
+       * object here for the measure. I'm not sure we'll be binding against
+       * these instances directly anyway (rather than an intermediate
+       * "MusicianMeasure" or something).
+       */
     }
 
   return TRUE;
@@ -244,16 +252,17 @@ musician_gp4_parser_load_tracks (MusicianGp4Parser       *self,
 
   for (guint i = 0; i < n_tracks; i++)
     {
-      g_autofree gchar *name = NULL;
+      g_autofree gchar *title = NULL;
+      g_autoptr(MusicianGptTrack) track = NULL;
       MusicianGptTrackFlags flags;
       GdkRGBA color;
       guint32 n_strings;
-      guint32 tunings[7];
       guint32 port;
       guint32 channel;
       guint32 channel_effects;
       guint32 n_frets;
       guint32 capo_at;
+      gint32 tunings[7];
       guint8 header;
 
       if (!musician_gpt_input_stream_read_byte (stream, cancellable, &header, error))
@@ -261,7 +270,7 @@ musician_gp4_parser_load_tracks (MusicianGp4Parser       *self,
 
       flags = header;
 
-      if (NULL == (name = musician_gpt_input_stream_read_fixed_string (stream, 40, cancellable, error)))
+      if (NULL == (title = musician_gpt_input_stream_read_fixed_string (stream, 40, cancellable, error)))
         return FALSE;
 
       if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_strings, error))
@@ -269,7 +278,7 @@ musician_gp4_parser_load_tracks (MusicianGp4Parser       *self,
 
       for (guint j = 0; j < G_N_ELEMENTS (tunings); j++)
         {
-          if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &tunings[j], error))
+          if (!musician_gpt_input_stream_read_int32 (stream, cancellable, &tunings[j], error))
             return FALSE;
         }
 
@@ -280,6 +289,15 @@ musician_gp4_parser_load_tracks (MusicianGp4Parser       *self,
           !musician_gpt_input_stream_read_uint32 (stream, cancellable, &capo_at, error) ||
           !musician_gpt_input_stream_read_color (stream, cancellable, &color, error))
         return FALSE;
+
+      track = musician_gpt_track_new ();
+
+      musician_gpt_track_set_id (track, i + 1);
+      musician_gpt_track_set_title (track, title);
+      musician_gpt_track_set_color (track, &color);
+      musician_gpt_track_set_tunings (track, tunings, G_N_ELEMENTS (tunings));
+
+      musician_gpt_song_add_track (song, track);
     }
 
   return TRUE;
