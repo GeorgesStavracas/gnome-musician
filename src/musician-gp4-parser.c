@@ -292,9 +292,14 @@ musician_gp4_parser_load_tracks (MusicianGp4Parser       *self,
 
       track = musician_gpt_track_new ();
 
-      musician_gpt_track_set_id (track, i + 1);
-      musician_gpt_track_set_title (track, title);
+      musician_gpt_track_set_capo_at (track, capo_at);
+      musician_gpt_track_set_channel_effects (track, channel_effects);
+      musician_gpt_track_set_channel (track, channel);
       musician_gpt_track_set_color (track, &color);
+      musician_gpt_track_set_id (track, i + 1);
+      musician_gpt_track_set_n_frets (track, n_frets);
+      musician_gpt_track_set_port (track, port);
+      musician_gpt_track_set_title (track, title);
       musician_gpt_track_set_tunings (track, tunings, G_N_ELEMENTS (tunings));
 
       musician_gpt_song_add_track (song, track);

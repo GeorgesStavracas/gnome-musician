@@ -34,6 +34,11 @@ typedef gint32 MusicianGptTuning;
 
 typedef enum
 {
+  MUSICIAN_GPT_CHANNEL_EFFECTS_NONE = 0,
+} MusicianGptChannelEffects;
+
+typedef enum
+{
   MUSICIAN_GPT_MEASURE_FLAGS_NONE              = 0,
   MUSICIAN_GPT_MEASURE_FLAGS_KEY_NUMERATOR     = 1 << 0,
   MUSICIAN_GPT_MEASURE_FLAGS_KEY_DENOMINATOR   = 1 << 1,

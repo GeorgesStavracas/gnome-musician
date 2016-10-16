@@ -23,9 +23,14 @@
 typedef struct
 {
   gchar *title;
+  GArray *tunings;
   GdkRGBA color;
   guint id;
-  GArray *tunings;
+  guint capo_at;
+  guint n_frets;
+  guint port;
+  guint channel;
+  MusicianGptChannelEffects channel_effects;
 } MusicianGptTrackPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (MusicianGptTrack, musician_gpt_track, G_TYPE_OBJECT)
@@ -33,7 +38,12 @@ G_DEFINE_TYPE_WITH_PRIVATE (MusicianGptTrack, musician_gpt_track, G_TYPE_OBJECT)
 enum {
   PROP_0,
   PROP_COLOR,
+  PROP_CAPO_AT,
+  PROP_CHANNEL,
+  PROP_CHANNEL_EFFECTS,
   PROP_ID,
+  PROP_N_FRETS,
+  PROP_PORT,
   PROP_TITLE,
   N_PROPS
 };
@@ -68,12 +78,32 @@ musician_gpt_track_get_property (GObject    *object,
 
   switch (prop_id)
     {
+    case PROP_CAPO_AT:
+      g_value_set_uint (value, musician_gpt_track_get_capo_at (self));
+      break;
+
+    case PROP_CHANNEL:
+      g_value_set_uint (value, musician_gpt_track_get_channel (self));
+      break;
+
+    case PROP_CHANNEL_EFFECTS:
+      g_value_set_flags (value, musician_gpt_track_get_channel_effects (self));
+      break;
+
     case PROP_COLOR:
       g_value_set_boxed (value, musician_gpt_track_get_color (self));
       break;
 
     case PROP_ID:
       g_value_set_uint (value, musician_gpt_track_get_id (self));
+      break;
+
+    case PROP_N_FRETS:
+      g_value_set_uint (value, musician_gpt_track_get_n_frets (self));
+      break;
+
+    case PROP_PORT:
+      g_value_set_uint (value, musician_gpt_track_get_port (self));
       break;
 
     case PROP_TITLE:
@@ -95,12 +125,32 @@ musician_gpt_track_set_property (GObject      *object,
 
   switch (prop_id)
     {
+    case PROP_CAPO_AT:
+      musician_gpt_track_set_capo_at (self, g_value_get_uint (value));
+      break;
+
+    case PROP_CHANNEL:
+      musician_gpt_track_set_channel (self, g_value_get_uint (value));
+      break;
+
+    case PROP_CHANNEL_EFFECTS:
+      musician_gpt_track_set_channel_effects (self, g_value_get_flags (value));
+      break;
+
     case PROP_COLOR:
       musician_gpt_track_set_color (self, g_value_get_boxed (value));
       break;
 
     case PROP_ID:
       musician_gpt_track_set_id (self, g_value_get_uint (value));
+      break;
+
+    case PROP_N_FRETS:
+      musician_gpt_track_set_n_frets (self, g_value_get_uint (value));
+      break;
+
+    case PROP_PORT:
+      musician_gpt_track_set_port (self, g_value_get_uint (value));
       break;
 
     case PROP_TITLE:
@@ -121,6 +171,32 @@ musician_gpt_track_class_init (MusicianGptTrackClass *klass)
   object_class->get_property = musician_gpt_track_get_property;
   object_class->set_property = musician_gpt_track_set_property;
 
+  properties [PROP_CAPO_AT] =
+    g_param_spec_uint ("capo-at",
+                       "Capo At",
+                       "Capo At",
+                       0,
+                       100,
+                       0,
+                       (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
+  properties [PROP_CHANNEL] =
+    g_param_spec_uint ("channel",
+                       "Channel",
+                       "Channel",
+                       0,
+                       16,
+                       0,
+                       (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
+  properties [PROP_CHANNEL_EFFECTS] =
+    g_param_spec_flags ("channel-effects",
+                        "Channel Effects",
+                        "Channel Effects",
+                        MUSICIAN_TYPE_GPT_CHANNEL_EFFECTS,
+                        MUSICIAN_GPT_CHANNEL_EFFECTS_NONE,
+                        (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
   properties [PROP_COLOR] =
     g_param_spec_boxed ("color",
                         "Color",
@@ -134,6 +210,24 @@ musician_gpt_track_class_init (MusicianGptTrackClass *klass)
                        "Id",
                        0,
                        G_MAXUINT,
+                       0,
+                       (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
+  properties [PROP_N_FRETS] =
+    g_param_spec_uint ("n-frets",
+                       "N Frets",
+                       "N Frets",
+                       0,
+                       100,
+                       0,
+                       (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
+  properties [PROP_PORT] =
+    g_param_spec_uint ("port",
+                       "Port",
+                       "Port",
+                       0,
+                       1000,
                        0,
                        (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
 
@@ -264,4 +358,139 @@ musician_gpt_track_set_tunings (MusicianGptTrack        *self,
 
   if (n_tunings > 0)
     g_array_append_vals (priv->tunings, tunings, n_tunings);
+}
+
+guint
+musician_gpt_track_get_capo_at (MusicianGptTrack *self)
+{
+  MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
+
+  g_return_val_if_fail (MUSICIAN_IS_GPT_TRACK (self), 0);
+
+  return priv->capo_at;
+}
+
+guint
+musician_gpt_track_get_channel (MusicianGptTrack *self)
+{
+  MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
+
+  g_return_val_if_fail (MUSICIAN_IS_GPT_TRACK (self), 0);
+
+  return priv->channel;
+}
+
+MusicianGptChannelEffects
+musician_gpt_track_get_channel_effects (MusicianGptTrack *self)
+{
+  MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
+
+  g_return_val_if_fail (MUSICIAN_IS_GPT_TRACK (self), 0);
+
+  return priv->channel_effects;
+}
+
+guint
+musician_gpt_track_get_n_frets (MusicianGptTrack *self)
+{
+  MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
+
+  g_return_val_if_fail (MUSICIAN_IS_GPT_TRACK (self), 0);
+
+  return priv->n_frets;
+}
+
+guint
+musician_gpt_track_get_port (MusicianGptTrack *self)
+{
+  MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
+
+  g_return_val_if_fail (MUSICIAN_IS_GPT_TRACK (self), 0);
+
+  return priv->port;
+}
+
+void
+musician_gpt_track_set_capo_at (MusicianGptTrack *self,
+                                guint             capo_at)
+{
+  MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
+
+  g_return_if_fail (MUSICIAN_IS_GPT_TRACK (self));
+
+  if (capo_at != priv->capo_at)
+    {
+      priv->capo_at = capo_at;
+      g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_CAPO_AT]);
+    }
+}
+
+void
+musician_gpt_track_set_channel (MusicianGptTrack *self,
+                                guint             channel)
+{
+  MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
+
+  g_return_if_fail (MUSICIAN_IS_GPT_TRACK (self));
+
+  if (priv->channel != channel)
+    {
+      priv->channel = channel;
+      g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_CHANNEL]);
+    }
+}
+
+void
+musician_gpt_track_set_channel_effects (MusicianGptTrack          *self,
+                                        MusicianGptChannelEffects  channel_effects)
+{
+  MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
+
+  g_return_if_fail (MUSICIAN_IS_GPT_TRACK (self));
+
+  if (priv->channel_effects != channel_effects)
+    {
+      priv->channel_effects = channel_effects;
+      g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_CHANNEL_EFFECTS]);
+    }
+}
+
+void
+musician_gpt_track_set_n_frets (MusicianGptTrack *self,
+                                guint             n_frets)
+{
+  MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
+
+  g_return_if_fail (MUSICIAN_IS_GPT_TRACK (self));
+
+  if (priv->n_frets != n_frets)
+    {
+      priv->n_frets = n_frets;
+      g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_N_FRETS]);
+    }
+}
+
+void
+musician_gpt_track_set_port (MusicianGptTrack *self,
+                             guint             port)
+{
+  MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
+
+  g_return_if_fail (MUSICIAN_IS_GPT_TRACK (self));
+
+  if (priv->port != port)
+    {
+      priv->port = port;
+      g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_PORT]);
+    }
+}
+
+guint
+musician_gpt_track_get_n_strings (MusicianGptTrack *self)
+{
+  MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
+
+  g_return_val_if_fail (MUSICIAN_IS_GPT_TRACK (self), 0);
+
+  return priv->tunings->len;
 }

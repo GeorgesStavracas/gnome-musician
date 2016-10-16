@@ -43,21 +43,37 @@ struct _MusicianGptTrackClass
   gpointer _reserved8;
 };
 
-MusicianGptTrack        *musician_gpt_track_new          (void);
-const gchar             *musician_gpt_track_get_title    (MusicianGptTrack        *self);
-void                     musician_gpt_track_set_title    (MusicianGptTrack        *self,
-                                                          const gchar             *name);
-guint                    musician_gpt_track_get_id       (MusicianGptTrack        *self);
-void                     musician_gpt_track_set_id       (MusicianGptTrack        *self,
-                                                          guint                    id);
-const GdkRGBA           *musician_gpt_track_get_color    (MusicianGptTrack        *self);
-void                     musician_gpt_track_set_color    (MusicianGptTrack        *self,
-                                                          const GdkRGBA           *color);
-const MusicianGptTuning *musician_gpt_track_get_tunings  (MusicianGptTrack        *self,
-                                                          gsize                   *n_tunings);
-void                     musician_gpt_track_set_tunings  (MusicianGptTrack        *self,
-                                                          const MusicianGptTuning *tunings,
-                                                          gsize                    n_tunings);
+MusicianGptTrack          *musician_gpt_track_new                 (void);
+const gchar               *musician_gpt_track_get_title           (MusicianGptTrack          *self);
+void                       musician_gpt_track_set_title           (MusicianGptTrack          *self,
+                                                                   const gchar               *name);
+guint                      musician_gpt_track_get_id              (MusicianGptTrack          *self);
+void                       musician_gpt_track_set_id              (MusicianGptTrack          *self,
+                                                                   guint                      id);
+const GdkRGBA             *musician_gpt_track_get_color           (MusicianGptTrack          *self);
+void                       musician_gpt_track_set_color           (MusicianGptTrack          *self,
+                                                                   const GdkRGBA             *color);
+const MusicianGptTuning   *musician_gpt_track_get_tunings         (MusicianGptTrack          *self,
+                                                                   gsize                     *n_tunings);
+void                       musician_gpt_track_set_tunings         (MusicianGptTrack          *self,
+                                                                   const MusicianGptTuning   *tunings,
+                                                                   gsize                      n_tunings);
+guint                      musician_gpt_track_get_capo_at         (MusicianGptTrack          *self);
+void                       musician_gpt_track_set_capo_at         (MusicianGptTrack          *self,
+                                                                   guint                      capo_at);
+guint                      musician_gpt_track_get_channel         (MusicianGptTrack          *self);
+void                       musician_gpt_track_set_channel         (MusicianGptTrack          *self,
+                                                                   guint                      channel);
+MusicianGptChannelEffects  musician_gpt_track_get_channel_effects (MusicianGptTrack          *self);
+void                       musician_gpt_track_set_channel_effects (MusicianGptTrack          *self,
+                                                                   MusicianGptChannelEffects  channel_effects);
+guint                      musician_gpt_track_get_n_frets         (MusicianGptTrack          *self);
+void                       musician_gpt_track_set_n_frets         (MusicianGptTrack          *self,
+                                                                   guint                      n_frets);
+guint                      musician_gpt_track_get_port            (MusicianGptTrack          *self);
+void                       musician_gpt_track_set_port            (MusicianGptTrack          *self,
+                                                                   guint                      port);
+guint                      musician_gpt_track_get_n_strings       (MusicianGptTrack          *self);
 
 G_END_DECLS
 
