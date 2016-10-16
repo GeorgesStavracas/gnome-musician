@@ -25,12 +25,33 @@
 
 G_BEGIN_DECLS
 
-typedef struct _MusicianGptSong  MusicianGptSong;
-typedef struct _MusicianGptTrack MusicianGptTrack;
+typedef struct _MusicianGptSong    MusicianGptSong;
+typedef struct _MusicianGptTrack   MusicianGptTrack;
+typedef struct _MusicianGptMeasure MusicianGptMeasure;
 
 typedef gint32 MusicianGptNote;
-typedef gint32 MusicianGptKey;
 typedef gint32 MusicianGptTuning;
+
+typedef enum
+{
+  MUSICIAN_GPT_KEY_C        = 0,
+
+  MUSICIAN_GPT_KEY_G        = 1,   /* 1 Sharp  */
+  MUSICIAN_GPT_KEY_D        = 2,   /* 2 Sharps */
+  MUSICIAN_GPT_KEY_A        = 3,   /* 3 Sharps */
+  MUSICIAN_GPT_KEY_E        = 4,   /* 4 Sharps */
+  MUSICIAN_GPT_KEY_B        = 5,   /* 5 Sharps */
+  MUSICIAN_GPT_KEY_F_SHARP  = 6,   /* 6 Sharps */
+  MUSICIAN_GPT_KEY_C_SHARP  = 7,   /* 7 Sharps */
+
+  MUSICIAN_GPT_KEY_F        = -1,  /* 1 Flat */
+  MUSICIAN_GPT_KEY_B_FLAT   = -2,  /* 2 Flats */
+  MUSICIAN_GPT_KEY_E_FLAT   = -3,  /* 3 Flats */
+  MUSICIAN_GPT_KEY_A_FLAT   = -4,  /* 4 Flats */
+  MUSICIAN_GPT_KEY_D_FLAT   = -5,  /* 5 Flats */
+  MUSICIAN_GPT_KEY_G_FLAT   = -6,  /* 6 Flats */
+  MUSICIAN_GPT_KEY_C_FLAT   = -7,  /* 7 Flats */
+} MusicianGptKey;
 
 typedef enum
 {

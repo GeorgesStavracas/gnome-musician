@@ -18,6 +18,7 @@
 
 #define G_LOG_DOMAIN "musician-gp4-parser"
 
+#include "musician-gpt-measure.h"
 #include "musician-gp4-parser.h"
 #include "musician-gpt-song.h"
 #include "musician-gpt-song-private.h"
@@ -170,12 +171,13 @@ musician_gp4_parser_load_measures (MusicianGp4Parser       *self,
 
   for (guint i = 0; i < n_measures; i++)
     {
+      g_autoptr(MusicianGptMeasure) measure = NULL;
       MusicianGptMeasureFlags flags;
       guint8 header;
       guint8 numerator = 0;
       guint8 denominator = 0;
       guint8 n_repeats = 0;
-      guint8 nth_alternate = 0;
+      guint8 nth_ending = 0;
       guint8 key = 0;
 
       if (!musician_gpt_input_stream_read_byte (stream, cancellable, &header, error))
@@ -183,28 +185,36 @@ musician_gp4_parser_load_measures (MusicianGp4Parser       *self,
 
       flags = header;
 
+      measure = musician_gpt_measure_new ();
+
+      musician_gpt_measure_set_id (measure, i + 1);
+
       if (flags & MUSICIAN_GPT_MEASURE_FLAGS_KEY_NUMERATOR)
         {
           if (!musician_gpt_input_stream_read_byte (stream, cancellable, &numerator, error))
             return FALSE;
+          musician_gpt_measure_set_numerator (measure, numerator);
         }
 
       if (flags & MUSICIAN_GPT_MEASURE_FLAGS_KEY_DENOMINATOR)
         {
           if (!musician_gpt_input_stream_read_byte (stream, cancellable, &denominator, error))
             return FALSE;
+          musician_gpt_measure_set_denominator (measure, denominator);
         }
 
       if (flags & MUSICIAN_GPT_MEASURE_FLAGS_REPEAT_END)
         {
           if (!musician_gpt_input_stream_read_byte (stream, cancellable, &n_repeats, error))
             return FALSE;
+          musician_gpt_measure_set_nth_ending (measure, nth_ending);
         }
 
       if (flags & MUSICIAN_GPT_MEASURE_FLAGS_ALTERNATE_ENDING)
         {
-          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &nth_alternate, error))
+          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &nth_ending, error))
             return FALSE;
+          musician_gpt_measure_set_n_repeats (measure, n_repeats);
         }
 
       if (flags & MUSICIAN_GPT_MEASURE_FLAGS_MARKER)
@@ -217,6 +227,9 @@ musician_gp4_parser_load_measures (MusicianGp4Parser       *self,
 
           if (!musician_gpt_input_stream_read_color (stream, cancellable, &color, error))
             return FALSE;
+
+          musician_gpt_measure_set_marker_name (measure, name);
+          musician_gpt_measure_set_marker_color (measure, &color);
         }
 
       if (flags & MUSICIAN_GPT_MEASURE_FLAGS_TONALITY)
@@ -224,14 +237,10 @@ musician_gp4_parser_load_measures (MusicianGp4Parser       *self,
           if (!musician_gpt_input_stream_read_byte (stream, cancellable, &key, error) ||
               !musician_gpt_input_stream_read_byte (stream, cancellable, NULL, error))
             return FALSE;
+          musician_gpt_measure_set_key (measure, key);
         }
 
-      /*
-       * We might be able to do a lightweight instance instead of a full
-       * object here for the measure. I'm not sure we'll be binding against
-       * these instances directly anyway (rather than an intermediate
-       * "MusicianMeasure" or something).
-       */
+      musician_gpt_song_add_measure (song, measure);
     }
 
   return TRUE;

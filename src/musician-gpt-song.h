@@ -50,6 +50,12 @@ struct _MusicianGptSongClass
 MusicianGptSong        *musician_gpt_song_new                (void);
 void                    musician_gpt_song_add_track          (MusicianGptSong        *self,
                                                               MusicianGptTrack       *track);
+void                    musician_gpt_song_remove_track       (MusicianGptSong        *self,
+                                                              MusicianGptTrack       *track);
+void                    musician_gpt_song_add_measure        (MusicianGptSong        *self,
+                                                              MusicianGptMeasure     *measure);
+void                    musician_gpt_song_remove_measure     (MusicianGptSong        *self,
+                                                              MusicianGptMeasure     *measure);
 const gchar            *musician_gpt_song_get_album          (MusicianGptSong        *self);
 const gchar            *musician_gpt_song_get_artist         (MusicianGptSong        *self);
 const gchar            *musician_gpt_song_get_copyright      (MusicianGptSong        *self);

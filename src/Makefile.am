@@ -10,6 +10,8 @@ libgnome_musician_la_SOURCES = \
 	musician-gp4-parser.h \
 	musician-gpt-input-stream.c \
 	musician-gpt-input-stream.h \
+	musician-gpt-measure.c \
+	musician-gpt-measure.h \
 	musician-gpt-parser.c \
 	musician-gpt-parser.h \
 	musician-gpt-song.c \

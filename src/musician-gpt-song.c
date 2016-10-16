@@ -18,6 +18,7 @@
 
 #define G_LOG_DOMAIN "musician-gpt-song"
 
+#include "musician-gpt-measure.h"
 #include "musician-gpt-song.h"
 #include "musician-gpt-track.h"
 
@@ -35,6 +36,7 @@ typedef struct
 
   gchar **comments;
 
+  GSequence *measures;
   GPtrArray *tracks;
 
   MusicianGptTripletFeel triplet_feel;
@@ -85,6 +87,7 @@ musician_gpt_song_finalize (GObject *object)
   g_clear_pointer (&priv->version, g_free);
   g_clear_pointer (&priv->writer, g_free);
 
+  g_clear_pointer (&priv->measures, g_sequence_free);
   g_clear_pointer (&priv->tracks, g_ptr_array_unref);
 
   G_OBJECT_CLASS (musician_gpt_song_parent_class)->finalize (object);
@@ -334,8 +337,9 @@ musician_gpt_song_init (MusicianGptSong *self)
 {
   MusicianGptSongPrivate *priv = musician_gpt_song_get_instance_private (self);
 
-  priv->tracks = g_ptr_array_new_with_free_func (g_object_unref);
+  priv->measures = g_sequence_new (g_object_unref);
   priv->ports = g_array_new (FALSE, FALSE, sizeof (MusicianGptMidiPort));
+  priv->tracks = g_ptr_array_new_with_free_func (g_object_unref);
 }
 
 MusicianGptSong *
@@ -724,4 +728,37 @@ musician_gpt_song_remove_track (MusicianGptSong  *self,
   g_return_if_fail (MUSICIAN_IS_GPT_TRACK (track));
 
   g_ptr_array_remove (priv->tracks, track);
+}
+
+void
+musician_gpt_song_add_measure (MusicianGptSong    *self,
+                               MusicianGptMeasure *measure)
+{
+  MusicianGptSongPrivate *priv = musician_gpt_song_get_instance_private (self);
+
+  g_return_if_fail (MUSICIAN_IS_GPT_SONG (self));
+  g_return_if_fail (MUSICIAN_IS_GPT_MEASURE (measure));
+
+  g_sequence_insert_sorted (priv->measures,
+                            g_object_ref (measure),
+                            (GCompareDataFunc)musician_gpt_measure_compare,
+                            NULL);
+}
+
+void
+musician_gpt_song_remove_measure (MusicianGptSong    *self,
+                                  MusicianGptMeasure *measure)
+{
+  MusicianGptSongPrivate *priv = musician_gpt_song_get_instance_private (self);
+  GSequenceIter *iter;
+
+  g_return_if_fail (MUSICIAN_IS_GPT_SONG (self));
+  g_return_if_fail (MUSICIAN_IS_GPT_MEASURE (measure));
+
+  iter = g_sequence_lookup (priv->measures,
+                            measure,
+                            (GCompareDataFunc)musician_gpt_measure_compare,
+                            NULL);
+  if (iter != NULL)
+    g_sequence_remove (iter);
 }
