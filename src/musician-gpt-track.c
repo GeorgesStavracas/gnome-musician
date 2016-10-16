@@ -30,7 +30,7 @@ typedef struct
   guint n_frets;
   guint port;
   guint channel;
-  MusicianGptChannelEffects channel_effects;
+  guint effects_channel;
 } MusicianGptTrackPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (MusicianGptTrack, musician_gpt_track, G_TYPE_OBJECT)
@@ -40,7 +40,7 @@ enum {
   PROP_COLOR,
   PROP_CAPO_AT,
   PROP_CHANNEL,
-  PROP_CHANNEL_EFFECTS,
+  PROP_EFFECTS_CHANNEL,
   PROP_ID,
   PROP_N_FRETS,
   PROP_PORT,
@@ -86,8 +86,8 @@ musician_gpt_track_get_property (GObject    *object,
       g_value_set_uint (value, musician_gpt_track_get_channel (self));
       break;
 
-    case PROP_CHANNEL_EFFECTS:
-      g_value_set_flags (value, musician_gpt_track_get_channel_effects (self));
+    case PROP_EFFECTS_CHANNEL:
+      g_value_set_flags (value, musician_gpt_track_get_effects_channel (self));
       break;
 
     case PROP_COLOR:
@@ -133,8 +133,8 @@ musician_gpt_track_set_property (GObject      *object,
       musician_gpt_track_set_channel (self, g_value_get_uint (value));
       break;
 
-    case PROP_CHANNEL_EFFECTS:
-      musician_gpt_track_set_channel_effects (self, g_value_get_flags (value));
+    case PROP_EFFECTS_CHANNEL:
+      musician_gpt_track_set_effects_channel (self, g_value_get_flags (value));
       break;
 
     case PROP_COLOR:
@@ -189,12 +189,12 @@ musician_gpt_track_class_init (MusicianGptTrackClass *klass)
                        0,
                        (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
 
-  properties [PROP_CHANNEL_EFFECTS] =
+  properties [PROP_EFFECTS_CHANNEL] =
     g_param_spec_flags ("channel-effects",
                         "Channel Effects",
                         "Channel Effects",
-                        MUSICIAN_TYPE_GPT_CHANNEL_EFFECTS,
-                        MUSICIAN_GPT_CHANNEL_EFFECTS_NONE,
+                        MUSICIAN_TYPE_GPT_EFFECTS_CHANNEL,
+                        MUSICIAN_GPT_EFFECTS_CHANNEL_NONE,
                         (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
 
   properties [PROP_COLOR] =
@@ -381,13 +381,13 @@ musician_gpt_track_get_channel (MusicianGptTrack *self)
 }
 
 MusicianGptChannelEffects
-musician_gpt_track_get_channel_effects (MusicianGptTrack *self)
+musician_gpt_track_get_effects_channel (MusicianGptTrack *self)
 {
   MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
 
   g_return_val_if_fail (MUSICIAN_IS_GPT_TRACK (self), 0);
 
-  return priv->channel_effects;
+  return priv->effects_channel;
 }
 
 guint
@@ -441,17 +441,17 @@ musician_gpt_track_set_channel (MusicianGptTrack *self,
 }
 
 void
-musician_gpt_track_set_channel_effects (MusicianGptTrack          *self,
-                                        MusicianGptChannelEffects  channel_effects)
+musician_gpt_track_set_effects_channel (MusicianGptTrack *self,
+                                        guint             effects_channel)
 {
   MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
 
   g_return_if_fail (MUSICIAN_IS_GPT_TRACK (self));
 
-  if (priv->channel_effects != channel_effects)
+  if (priv->effects_channel != effects_channel)
     {
-      priv->channel_effects = channel_effects;
-      g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_CHANNEL_EFFECTS]);
+      priv->effects_channel = effects_channel;
+      g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_EFFECTS_CHANNEL]);
     }
 }
 

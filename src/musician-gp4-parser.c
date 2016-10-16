@@ -259,7 +259,7 @@ musician_gp4_parser_load_tracks (MusicianGp4Parser       *self,
       guint32 n_strings;
       guint32 port;
       guint32 channel;
-      guint32 channel_effects;
+      guint32 effects_channel;
       guint32 n_frets;
       guint32 capo_at;
       gint32 tunings[7];
@@ -284,7 +284,7 @@ musician_gp4_parser_load_tracks (MusicianGp4Parser       *self,
 
       if (!musician_gpt_input_stream_read_uint32 (stream, cancellable, &port, error) ||
           !musician_gpt_input_stream_read_uint32 (stream, cancellable, &channel, error) ||
-          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &channel_effects, error) ||
+          !musician_gpt_input_stream_read_uint32 (stream, cancellable, &effects_channel, error) ||
           !musician_gpt_input_stream_read_uint32 (stream, cancellable, &n_frets, error) ||
           !musician_gpt_input_stream_read_uint32 (stream, cancellable, &capo_at, error) ||
           !musician_gpt_input_stream_read_color (stream, cancellable, &color, error))
@@ -293,9 +293,9 @@ musician_gp4_parser_load_tracks (MusicianGp4Parser       *self,
       track = musician_gpt_track_new ();
 
       musician_gpt_track_set_capo_at (track, capo_at);
-      musician_gpt_track_set_channel_effects (track, channel_effects);
       musician_gpt_track_set_channel (track, channel);
       musician_gpt_track_set_color (track, &color);
+      musician_gpt_track_set_effects_channel (track, effects_channel);
       musician_gpt_track_set_id (track, i + 1);
       musician_gpt_track_set_n_frets (track, n_frets);
       musician_gpt_track_set_port (track, port);

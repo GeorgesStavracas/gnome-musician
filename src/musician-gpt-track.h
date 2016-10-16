@@ -64,9 +64,9 @@ void                       musician_gpt_track_set_capo_at         (MusicianGptTr
 guint                      musician_gpt_track_get_channel         (MusicianGptTrack          *self);
 void                       musician_gpt_track_set_channel         (MusicianGptTrack          *self,
                                                                    guint                      channel);
-MusicianGptChannelEffects  musician_gpt_track_get_channel_effects (MusicianGptTrack          *self);
-void                       musician_gpt_track_set_channel_effects (MusicianGptTrack          *self,
-                                                                   MusicianGptChannelEffects  channel_effects);
+guint                      musician_gpt_track_get_effects_channel (MusicianGptTrack          *self);
+void                       musician_gpt_track_set_effects_channel (MusicianGptTrack          *self,
+                                                                   guint                      effects_channel);
 guint                      musician_gpt_track_get_n_frets         (MusicianGptTrack          *self);
 void                       musician_gpt_track_set_n_frets         (MusicianGptTrack          *self,
                                                                    guint                      n_frets);
