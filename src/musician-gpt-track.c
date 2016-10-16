@@ -190,12 +190,13 @@ musician_gpt_track_class_init (MusicianGptTrackClass *klass)
                        (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
 
   properties [PROP_EFFECTS_CHANNEL] =
-    g_param_spec_flags ("channel-effects",
-                        "Channel Effects",
-                        "Channel Effects",
-                        MUSICIAN_TYPE_GPT_EFFECTS_CHANNEL,
-                        MUSICIAN_GPT_EFFECTS_CHANNEL_NONE,
-                        (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+    g_param_spec_uint ("channel-effects",
+                       "Effects Channel",
+                       "Effects Channel",
+                       0,
+                       1000,
+                       0,
+                       (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
 
   properties [PROP_COLOR] =
     g_param_spec_boxed ("color",
@@ -380,7 +381,7 @@ musician_gpt_track_get_channel (MusicianGptTrack *self)
   return priv->channel;
 }
 
-MusicianGptChannelEffects
+guint
 musician_gpt_track_get_effects_channel (MusicianGptTrack *self)
 {
   MusicianGptTrackPrivate *priv = musician_gpt_track_get_instance_private (self);
