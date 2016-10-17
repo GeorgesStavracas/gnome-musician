@@ -762,3 +762,23 @@ musician_gpt_song_remove_measure (MusicianGptSong    *self,
   if (iter != NULL)
     g_sequence_remove (iter);
 }
+
+guint
+musician_gpt_song_get_n_measures (MusicianGptSong *self)
+{
+  MusicianGptSongPrivate *priv = musician_gpt_song_get_instance_private (self);
+
+  g_return_val_if_fail (MUSICIAN_IS_GPT_SONG (self), 0);
+
+  return g_sequence_get_length (priv->measures);
+}
+
+guint
+musician_gpt_song_get_n_tracks (MusicianGptSong *self)
+{
+  MusicianGptSongPrivate *priv = musician_gpt_song_get_instance_private (self);
+
+  g_return_val_if_fail (MUSICIAN_IS_GPT_SONG (self), 0);
+
+  return priv->tracks->len;
+}

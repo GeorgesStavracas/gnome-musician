@@ -19,6 +19,12 @@ libgnome_musician_la_SOURCES = \
 	musician-gpt-song-private.h \
 	musician-gpt-track.c \
 	musician-gpt-track.h \
+	musician-gpt-beat.c \
+	musician-gpt-beat.h \
+	musician-gpt-bend.c \
+	musician-gpt-bend.h \
+	musician-gpt-chord.c \
+	musician-gpt-chord.h \
 	$(NULL)
 
 libgnome_musician_la_CFLAGS = \

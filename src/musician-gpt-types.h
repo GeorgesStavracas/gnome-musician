@@ -28,9 +28,51 @@ G_BEGIN_DECLS
 typedef struct _MusicianGptSong    MusicianGptSong;
 typedef struct _MusicianGptTrack   MusicianGptTrack;
 typedef struct _MusicianGptMeasure MusicianGptMeasure;
+typedef struct _MusicianGptBeat    MusicianGptBeat;
+typedef struct _MusicianGptBend    MusicianGptBend;
+typedef struct _MusicianGptChord   MusicianGptChord;
+typedef struct _MusicianGptEffect  MusicianGptEffect;
 
 typedef gint32 MusicianGptNote;
 typedef gint32 MusicianGptTuning;
+
+typedef enum
+{
+  MUSICIAN_GPT_VIBRATO_NONE     = 0,
+  MUSICIAN_GPT_VIBRATO_FAST     = 1,
+  MUSICIAN_GPT_VIBRATO_AVERAGE  = 2,
+  MUSICIAN_GPT_VIBRATO_SLOW     = 3,
+} MusicianGptVibrato;
+
+typedef struct
+{
+  guint              absolute_position : 8;
+  guint              vertical_position : 16;
+  MusicianGptVibrato vibrato : 8;
+} MusicianGptBendPoint;
+
+typedef enum
+{
+  MUSICIAN_GPT_BEAT_MODE_EMPTY  = 0,
+  MUSICIAN_GPT_BEAT_MODE_NORMAL = 1,
+  MUSICIAN_GPT_BEAT_MODE_REST   = 2,
+} MusicianGptBeatMode;
+
+typedef enum
+{
+  MUSICIAN_GPT_BEND_NONE                      = 0,
+  MUSICIAN_GPT_BEND_BEND                      = 1,
+  MUSICIAN_GPT_BEND_BEND_AND_RELEASE          = 2,
+  MUSICIAN_GPT_BEND_BEND_AND_RELEASE_AND_BEND = 3,
+  MUSICIAN_GPT_BEND_PREBEND                   = 4,
+  MUSICIAN_GPT_BEND_PREBEND_AND_RELEASE       = 5,
+  MUSICIAN_GPT_BEND_TREMELO_DIP               = 6,
+  MUSICIAN_GPT_BEND_TREMELO_DIVE              = 7,
+  MUSICIAN_GPT_BEND_TREMELO_RELEASE_UP        = 8,
+  MUSICIAN_GPT_BEND_TREMELO_INVERTED_DIP      = 9,
+  MUSICIAN_GPT_BEND_TREMELO_RETRUN            = 10,
+  MUSICIAN_GPT_BEND_TREMELO_RELEASE_DOWN      = 11,
+} MusicianGptBendType;
 
 typedef enum
 {

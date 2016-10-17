@@ -56,6 +56,8 @@ void                    musician_gpt_song_add_measure        (MusicianGptSong   
                                                               MusicianGptMeasure     *measure);
 void                    musician_gpt_song_remove_measure     (MusicianGptSong        *self,
                                                               MusicianGptMeasure     *measure);
+guint                   musician_gpt_song_get_n_measures     (MusicianGptSong        *self);
+guint                   musician_gpt_song_get_n_tracks       (MusicianGptSong        *self);
 const gchar            *musician_gpt_song_get_album          (MusicianGptSong        *self);
 const gchar            *musician_gpt_song_get_artist         (MusicianGptSong        *self);
 const gchar            *musician_gpt_song_get_copyright      (MusicianGptSong        *self);
