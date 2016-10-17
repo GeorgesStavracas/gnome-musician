@@ -23,14 +23,15 @@
 
 struct _MusicianGptBeat
 {
-  volatile gint ref_count;
+  volatile gint        ref_count;
 
-  MusicianGptChord *chord;
-  gchar *text;
+  MusicianGptChord    *chord;
+  gchar               *text;
 
-  MusicianGptBeatMode mode;
-  guint duration;
-  guint n_tuplet;
+  guint                duration : 8;
+  MusicianGptBeatMode  mode     : 2;
+  MusicianGptDynamics  dynamics : 2;
+  guint                n_tuplet : 4;
 };
 
 G_DEFINE_BOXED_TYPE (MusicianGptBeat,
@@ -192,4 +193,21 @@ musician_gpt_beat_set_text (MusicianGptBeat *self,
       g_free (self->text);
       self->text = g_strdup (text);
     }
+}
+
+MusicianGptDynamics
+musician_gpt_beat_get_dynamics (MusicianGptBeat *self)
+{
+  g_return_val_if_fail (self != NULL, 0);
+
+  return self->dynamics;
+}
+
+void
+musician_gpt_beat_set_dynamics (MusicianGptBeat     *self,
+                                MusicianGptDynamics  dynamics)
+{
+  g_return_if_fail (self != NULL);
+
+  self->dynamics = dynamics;
 }

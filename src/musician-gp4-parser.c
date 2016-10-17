@@ -618,10 +618,12 @@ musician_gp4_parser_load_beat (MusicianGp4Parser       *self,
 
       if (effects1 & (1 << 5))
         {
-          guint8 tps;
+          guint8 dynamics;
 
-          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &tps, error))
+          if (!musician_gpt_input_stream_read_byte (stream, cancellable, &dynamics, error))
             return FALSE;
+
+          musician_gpt_beat_set_dynamics (beat, dynamics);
         }
 
       if (effects2 & (1 << 2))

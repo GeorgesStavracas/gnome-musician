@@ -46,6 +46,9 @@ void                 musician_gpt_beat_set_chord    (MusicianGptBeat     *self,
 const gchar         *musician_gpt_beat_get_text     (MusicianGptBeat     *self);
 void                 musician_gpt_beat_set_text     (MusicianGptBeat     *self,
                                                      const gchar         *text);
+MusicianGptDynamics  musician_gpt_beat_get_dynamics (MusicianGptBeat     *self);
+void                 musician_gpt_beat_set_dynamics (MusicianGptBeat     *self,
+                                                     MusicianGptDynamics  dynamics);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (MusicianGptBeat, musician_gpt_beat_unref)
 

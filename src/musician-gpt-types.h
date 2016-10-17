@@ -60,6 +60,14 @@ typedef enum
 
 typedef enum
 {
+  MUSICIAN_GPT_DYNAMICS_NONE     = 0,
+  MUSICIAN_GPT_DYNAMICS_TAPPING  = 1,
+  MUSICIAN_GPT_DYNAMICS_SLAPPING = 2,
+  MUSICIAN_GPT_DYNAMICS_POPPING  = 3,
+} MusicianGptDynamics;
+
+typedef enum
+{
   MUSICIAN_GPT_BEND_NONE                      = 0,
   MUSICIAN_GPT_BEND_BEND                      = 1,
   MUSICIAN_GPT_BEND_BEND_AND_RELEASE          = 2,
