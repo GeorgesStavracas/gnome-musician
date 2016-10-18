@@ -25,6 +25,8 @@ libgnome_musician_la_SOURCES = \
 	musician-gpt-bend.h \
 	musician-gpt-chord.c \
 	musician-gpt-chord.h \
+	musician-gpt-lyrics.c \
+	musician-gpt-lyrics.h \
 	$(NULL)
 
 libgnome_musician_la_CFLAGS = \

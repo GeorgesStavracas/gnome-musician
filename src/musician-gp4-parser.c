@@ -378,6 +378,8 @@ musician_gp4_parser_load_chord (MusicianGp4Parser       *self,
   if (!musician_gpt_input_stream_read_byte (stream, cancellable, &sharp, error))
     return FALSE;
 
+  g_print ("%d sharp or flat\n", sharp);
+
   if (!g_input_stream_skip (G_INPUT_STREAM (stream), 3, cancellable, error))
     return FALSE;
 
@@ -563,13 +565,22 @@ musician_gp4_parser_load_beat (MusicianGp4Parser       *self,
     {
       guint8 status;
 
-      if (musician_gpt_input_stream_read_byte (stream, cancellable, &status, error))
+      if (!musician_gpt_input_stream_read_byte (stream, cancellable, &status, error))
         return FALSE;
 
       if (status == 2)
         musician_gpt_beat_set_mode (beat, MUSICIAN_GPT_BEAT_MODE_REST);
       else if (status == 0)
         musician_gpt_beat_set_mode (beat, MUSICIAN_GPT_BEAT_MODE_EMPTY);
+      else
+        {
+          g_set_error (error,
+                       G_IO_ERROR,
+                       G_IO_ERROR_INVALID_DATA,
+                       "Unknown beat mode of %d",
+                       status);
+          return FALSE;
+        }
     }
 
   if (!musician_gpt_input_stream_read_byte (stream, cancellable, &duration, error))

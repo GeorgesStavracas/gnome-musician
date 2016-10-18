@@ -18,6 +18,7 @@
 
 #define G_LOG_DOMAIN "musician-gpt-song"
 
+#include "musician-gpt-lyrics.h"
 #include "musician-gpt-measure.h"
 #include "musician-gpt-song.h"
 #include "musician-gpt-track.h"
@@ -38,6 +39,7 @@ typedef struct
 
   GSequence *measures;
   GPtrArray *tracks;
+  GPtrArray *lyrics;
 
   MusicianGptTripletFeel triplet_feel;
   MusicianGptKey key;
@@ -87,6 +89,7 @@ musician_gpt_song_finalize (GObject *object)
   g_clear_pointer (&priv->version, g_free);
   g_clear_pointer (&priv->writer, g_free);
 
+  g_clear_pointer (&priv->lyrics, g_ptr_array_free);
   g_clear_pointer (&priv->measures, g_sequence_free);
   g_clear_pointer (&priv->tracks, g_ptr_array_unref);
 
@@ -340,6 +343,7 @@ musician_gpt_song_init (MusicianGptSong *self)
   priv->measures = g_sequence_new (g_object_unref);
   priv->ports = g_array_new (FALSE, FALSE, sizeof (MusicianGptMidiPort));
   priv->tracks = g_ptr_array_new_with_free_func (g_object_unref);
+  priv->lyrics = g_ptr_array_new_with_free_func (g_object_unref);
 }
 
 MusicianGptSong *
@@ -612,9 +616,15 @@ _musician_gpt_song_add_lyrics (MusicianGptSong *self,
                                guint            position,
                                const gchar     *lyrics)
 {
+  MusicianGptSongPrivate *priv = musician_gpt_song_get_instance_private (self);
+
   g_return_if_fail (MUSICIAN_IS_GPT_SONG (self));
 
-  /* TODO: Lyrics position/lyrics pair */
+  g_ptr_array_add (priv->lyrics,
+                   g_object_new (MUSICIAN_TYPE_GPT_LYRICS,
+                                 "text", lyrics,
+                                 "position", position,
+                                 NULL));
 }
 
 guint

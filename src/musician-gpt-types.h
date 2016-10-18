@@ -32,6 +32,7 @@ typedef struct _MusicianGptBeat    MusicianGptBeat;
 typedef struct _MusicianGptBend    MusicianGptBend;
 typedef struct _MusicianGptChord   MusicianGptChord;
 typedef struct _MusicianGptEffect  MusicianGptEffect;
+typedef struct _MusicianGptLyrics  MusicianGptLyrics;
 
 typedef gint32 MusicianGptNote;
 typedef gint32 MusicianGptTuning;
@@ -78,7 +79,7 @@ typedef enum
   MUSICIAN_GPT_BEND_TREMELO_DIVE              = 7,
   MUSICIAN_GPT_BEND_TREMELO_RELEASE_UP        = 8,
   MUSICIAN_GPT_BEND_TREMELO_INVERTED_DIP      = 9,
-  MUSICIAN_GPT_BEND_TREMELO_RETRUN            = 10,
+  MUSICIAN_GPT_BEND_TREMELO_RETURN            = 10,
   MUSICIAN_GPT_BEND_TREMELO_RELEASE_DOWN      = 11,
 } MusicianGptBendType;
 

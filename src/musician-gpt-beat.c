@@ -42,7 +42,12 @@ G_DEFINE_BOXED_TYPE (MusicianGptBeat,
 static void
 musician_gpt_beat_destroy (MusicianGptBeat *self)
 {
-  g_slice_free (MusicianGptBeat, self);
+  if (self != NULL)
+    {
+      g_clear_pointer (&self->chord, musician_gpt_chord_unref);
+      g_clear_pointer (&self->text, g_free);
+      g_slice_free (MusicianGptBeat, self);
+    }
 }
 
 MusicianGptBeat *
@@ -108,7 +113,6 @@ musician_gpt_beat_set_duration (MusicianGptBeat *self,
                                 guint            duration)
 {
   g_return_if_fail (self != NULL);
-  g_return_if_fail (duration > 0);
   g_return_if_fail (duration <= G_MAXINT8);
 
   self->duration = duration;
