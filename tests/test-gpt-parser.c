@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <musician-gpt-parser.h>
+#include <musician.h>
 
 static GInputStream *
 get_test_file (const gchar   *name,

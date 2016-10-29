@@ -31,6 +31,7 @@ libgnome_musician_la_SOURCES = \
 
 libgnome_musician_la_CFLAGS = \
 	$(GNOME_MUSICIAN_CFLAGS) \
+	-I$(builddir) \
 	$(NULL)
 
 libgnome_musician_la_LIBADD = \
