@@ -1,4 +1,7 @@
-noinst_PROGRAMS = test-gpt-parser
+check_PROGRAMS =
+
+# GPT Parser
+check_PROGRAMS += test-gpt-parser
 
 test_gpt_parser_SOURCES = test-gpt-parser.c
 
@@ -13,5 +16,7 @@ test_gpt_parser_LDADD = \
 	$(GNOME_MUSICIAN_LIBS) \
 	$(top_builddir)/src/libgnome-musician.la \
 	$(NULL)
+
+TESTS = $(check_PROGRAMS)
 
 -include $(top_srcdir)/git.mk
